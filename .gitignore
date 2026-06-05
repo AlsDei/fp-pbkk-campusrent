@@ -1,0 +1,58 @@
+# Kiro / AI tool files
+.kiro/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+*.egg
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Environment variables
+.env
+
+# Uploads (generated at runtime)
+uploads/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+test.db
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Byte-compiled
+*.pyc
+
+# Distribution
+*.tar.gz
+*.whl
