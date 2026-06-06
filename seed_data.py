@@ -139,8 +139,7 @@ def seed():
     permit2 = Permit(
         user_id=renter2.id,
         file_path="./uploads/permits/sample_permit_2.pdf",
-        status=PermitStatus.APPROVED,
-        reviewed_by=admin.id,
+        status=PermitStatus.PENDING,
     )
 
     db.add_all([permit1, permit2])

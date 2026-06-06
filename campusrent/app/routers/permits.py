@@ -227,3 +227,31 @@ def verify_permit(
     db.refresh(permit)
 
     return permit
+
+
+@router.get("/{permit_id}/download")
+def download_permit_file(
+    permit_id: int,
+    current_user: User = Depends(require_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """
+    Download a permit file. Admin only.
+    """
+    from fastapi.responses import FileResponse
+
+    permit = db.query(Permit).filter(Permit.id == permit_id).first()
+    if not permit:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Permit not found",
+        )
+
+    if not permit.file_path or not os.path.exists(permit.file_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Permit file not found on disk",
+        )
+
+    filename = os.path.basename(permit.file_path)
+    return FileResponse(permit.file_path, filename=filename)

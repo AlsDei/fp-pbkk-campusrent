@@ -250,6 +250,17 @@ def verify_permit(permit_id: int, action: str, rejection_reason: str = "") -> Op
     return _handle_response(resp)
 
 
+def download_permit(permit_id: int) -> Optional[bytes]:
+    """Admin: download a permit file. Returns raw bytes or None."""
+    resp = requests.get(
+        f"{BASE_URL}/permits/{permit_id}/download",
+        headers=_get_headers(),
+    )
+    if resp.status_code == 200:
+        return resp.content
+    return None
+
+
 # ─── Review Endpoints ────────────────────────────────────────────────────────
 
 

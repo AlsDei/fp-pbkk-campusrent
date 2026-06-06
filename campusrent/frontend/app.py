@@ -105,7 +105,7 @@ else:
         col_a, col_b = st.columns(2)
         with col_a:
             if st.button("📄 Review Permits", use_container_width=True):
-                st.switch_page("pages/9_Admin_Panel.py")
+                st.switch_page("pages/11_Admin_Panel.py")
         with col_b:
             if st.button("📦 Browse Catalog", use_container_width=True):
                 st.switch_page("pages/3_Equipment_Catalog.py")
