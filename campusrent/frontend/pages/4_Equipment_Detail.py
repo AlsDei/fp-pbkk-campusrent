@@ -41,6 +41,13 @@ if not data:
 if st.button("← Back to Catalog"):
     st.switch_page("pages/3_Equipment_Catalog.py")
 
+# ─── Build Availability Map (used by both rent section and calendar) ──────────
+
+availability = data.get("availability", [])
+avail_map = {}
+for entry in availability:
+    avail_map[entry["date"]] = entry["available"]
+
 # ─── Product Detail Layout ────────────────────────────────────────────────────
 
 col_img, col_detail = st.columns([1, 2])
@@ -93,11 +100,11 @@ with col_detail:
     vendor = data.get("vendor")
     if vendor:
         st.markdown(f"""
-        <div style="background: #f9f9f9; border-radius: 8px; padding: 12px; margin-top: 12px; display: flex; align-items: center; gap: 12px;">
+        <div style="background: #2d2d3f; border: 1px solid #3d3d52; border-radius: 8px; padding: 12px; margin-top: 12px; display: flex; align-items: center; gap: 12px;">
             <span style="font-size: 28px;">🏪</span>
             <div>
-                <div style="font-weight: 600; color: #333;">{vendor.get('name') or 'Unnamed Vendor'}</div>
-                <div style="font-size: 12px; color: #666;">{vendor.get('email', '')}</div>
+                <div style="font-weight: 600; color: #e0e0e0;">{vendor.get('name') or 'Unnamed Vendor'}</div>
+                <div style="font-size: 12px; color: #888;">{vendor.get('email', '')}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -105,7 +112,84 @@ with col_detail:
     # Rent button area
     st.markdown("<br>", unsafe_allow_html=True)
     if is_logged_in() and get_role() == "penyewa":
-        st.info(f"💡 Use Equipment ID `{equipment_id}` when placing an order from the **My Orders** page. An approved permit is required.")
+        st.markdown("##### 🛒 Rent This Equipment")
+
+        col_start, col_end = st.columns(2)
+        with col_start:
+            start_date = st.date_input("Start Date", key="cart_start")
+        with col_end:
+            end_date = st.date_input("End Date", key="cart_end")
+
+        # Price estimate and availability check
+        quantity = 1
+        dates_available = True
+        if end_date >= start_date:
+            num_days = (end_date - start_date).days + 1
+            estimated = data["price_per_day"] * num_days
+
+            # Check availability for selected dates
+            from datetime import timedelta
+            unavailable_dates = []
+            check_date = start_date
+            while check_date <= end_date:
+                date_str = check_date.isoformat()
+                if date_str in avail_map and not avail_map[date_str]:
+                    unavailable_dates.append(date_str)
+                check_date += timedelta(days=1)
+
+            if unavailable_dates:
+                dates_available = False
+                st.error(f"❌ Equipment is not available on: {', '.join(unavailable_dates)}")
+            else:
+                st.markdown(f"""
+                <div style="background: #1b5e20; border: 1px solid #2e7d32; border-radius: 8px; padding: 10px; margin: 8px 0;">
+                    <span style="color: #a5d6a7; font-size: 13px;">✅ Available for your selected dates</span>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div style="background: #2d2d3f; border: 1px solid #3d3d52; border-radius: 8px; padding: 12px; margin: 8px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #bbb; font-size: 13px;">{format_currency(data['price_per_day'])} × {num_days} day(s)</span>
+                    <span style="color: #ee4d2d; font-weight: 700; font-size: 18px;">{format_currency(estimated)}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.error("End date must be on or after start date.")
+            estimated = 0
+            dates_available = False
+
+        col_cart, col_buy = st.columns(2)
+        with col_cart:
+            if st.button("🛒 Add to Cart", use_container_width=True, disabled=not dates_available):
+                if "cart" not in st.session_state:
+                    st.session_state["cart"] = []
+                st.session_state["cart"].append({
+                    "equipment_id": equipment_id,
+                    "name": data["name"],
+                    "quantity": quantity,
+                    "start_date": start_date.isoformat(),
+                    "end_date": end_date.isoformat(),
+                    "price_per_day": data["price_per_day"],
+                    "subtotal": estimated,
+                })
+                st.success(f"✅ Added to cart! ({len(st.session_state['cart'])} item(s))")
+
+        with col_buy:
+            if st.button("⚡ Rent Now", type="primary", use_container_width=True, disabled=not dates_available):
+                st.session_state["cart"] = [{
+                    "equipment_id": equipment_id,
+                    "name": data["name"],
+                    "quantity": quantity,
+                    "start_date": start_date.isoformat(),
+                    "end_date": end_date.isoformat(),
+                    "price_per_day": data["price_per_day"],
+                    "subtotal": estimated,
+                }]
+                st.switch_page("pages/5_Cart.py")
+
+        st.caption("💡 You need an approved permit before placing an order.")
     elif is_logged_in() and get_role() == "pemilik_toko":
         st.caption("You're a vendor — you cannot rent equipment.")
     elif not is_logged_in():
@@ -125,12 +209,6 @@ st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("<h4>📅 Availability Calendar</h4>", unsafe_allow_html=True)
-
-# Build availability lookup
-availability = data.get("availability", [])
-avail_map = {}
-for entry in availability:
-    avail_map[entry["date"]] = entry["available"]
 
 today = date.today()
 

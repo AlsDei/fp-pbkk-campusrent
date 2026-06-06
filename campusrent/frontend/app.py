@@ -58,6 +58,17 @@ if is_logged_in():
     if st.sidebar.button("🚪 Logout", use_container_width=True):
         logout()
         st.rerun()
+
+    # Cart indicator
+    cart = st.session_state.get("cart", [])
+    if cart:
+        st.sidebar.markdown(f"""
+        <div style="background: #ee4d2d; border-radius: 8px; padding: 10px; text-align: center; margin-top: 8px;">
+            <span style="color: white; font-weight: 600;">🛒 Cart: {len(cart)} item(s)</span>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.sidebar.button("View Cart", use_container_width=True):
+            st.switch_page("pages/5_Cart.py")
 else:
     st.sidebar.info("Log in or register to get started.")
 
@@ -129,10 +140,10 @@ else:
                 st.switch_page("pages/3_Equipment_Catalog.py")
         with col_b:
             if st.button("📄 My Permits", use_container_width=True):
-                st.switch_page("pages/6_My_Permits.py")
+                st.switch_page("pages/7_My_Permits.py")
         with col_c:
             if st.button("🛒 My Orders", use_container_width=True):
-                st.switch_page("pages/5_My_Orders.py")
+                st.switch_page("pages/6_My_Orders.py")
 
     elif role == "pemilik_toko":
         st.subheader("Quick Actions")
